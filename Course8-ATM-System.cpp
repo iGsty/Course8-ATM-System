@@ -387,6 +387,41 @@ void normalWithdrawScreen(stClient& client, vector <stClient>& vClient)
 	printMainMenu(client, vClient);
 }
 
+void depositScreen(stClient& client, vector <stClient>& vClient)
+{
+	cout << "\n===========================================\n";
+	cout << "\tDeposit Screen";
+	cout << "\n===========================================\n";
+	cout << "Your balance is: " << client.accountBalance;
+	cout << "\n\nEnter a positive deposit amount: ";
+
+	int amount;
+	do
+	{
+		cin >> amount;
+
+		if (amount < 0)
+			cout << "\n\nNegative amount not accepted, please enter positive amount: ";
+
+	} while (amount < 0);
+
+	char answer = 'n';
+	cout << "\n\nAre you sure you want to perform this transaction? y/n: ";
+	cin >> ws >> answer;
+
+	if (tolower(answer) == 'y')
+	{
+		client.accountBalance += amount;
+		writeClientsBackToFile(vClient, client);
+		cout << "\n\nDone successfully. New balance is: " << client.accountBalance;
+	}
+
+	cout << "\n\nPress any key to go back to main menu...";
+	system("pause>0");
+	system("cls");
+	printMainMenu(client, vClient);
+}
+
 void selectATMChoice(enATMscreen choice, stClient& client, vector <stClient>& vClient)
 {
 	switch (choice)
@@ -400,6 +435,7 @@ void selectATMChoice(enATMscreen choice, stClient& client, vector <stClient>& vC
 		break;
 
 	case deposit:
+		depositScreen(client, vClient);
 		break;
 
 	case checkBalance:
