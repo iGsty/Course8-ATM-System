@@ -9,8 +9,6 @@ using namespace std;
 string clientsFilePath = "C:\\Users\\Gsty\\source\\repos\\Course8-Bank-Extension-Project\\Clients.txt";
 string delim = "#//#";
 
-void printMainMenu();
-
 struct stClient
 {
 	string accountNumber, pinCode, name, phone;
@@ -25,6 +23,8 @@ enum enATMscreen
 	checkBalance = 4,
 	logout = 5
 };
+
+void printMainMenu(stClient& client);
 
 enATMscreen readATMChoice()
 {
@@ -103,10 +103,25 @@ vector <stClient> readClientsFromFile()
 	return vClient;
 }
 
+stClient getClientData(vector <stClient>& vClient, string accountNum)
+{
+	stClient client;
+
+	for (stClient& c : vClient)
+	{
+		if (c.accountNumber == accountNum)
+		{
+			client = c;
+			return client;
+		}
+	}
+}
+
 void loginScreen()
 {
 	vector <stClient> vClient = readClientsFromFile();
 	string accountNumber, pinCode;
+	stClient client;
 
 	bool validClient = false;
 
@@ -125,6 +140,7 @@ void loginScreen()
 		if (vClient[i].accountNumber == accountNumber && vClient[i].pinCode == pinCode)
 		{
 			validClient = true;
+			client = getClientData(vClient, vClient[i].accountNumber);
 			break;
 		}
 	}
@@ -149,6 +165,7 @@ void loginScreen()
 				if (vClient[i].accountNumber == accountNumber && vClient[i].pinCode == pinCode)
 				{
 					validClient = true;
+					client = getClientData(vClient, vClient[i].accountNumber);
 					break;
 				}
 			}
@@ -159,11 +176,25 @@ void loginScreen()
 	if (validClient)
 	{
 		system("cls");
-		printMainMenu();
+		printMainMenu(client);
 	}
 }
 
-void selectATMChoice(enATMscreen choice)
+void checkBalanceScreen(stClient& client)
+{
+	cout << "\n===========================================\n";
+	cout << "\tCheck Balance Screen";
+	cout << "\n===========================================\n";
+	cout << "\nYour Balance is " << to_string(client.accountBalance);
+
+	cout << "\n\nPress any key to go back to main menu...";
+	system("pause>0");
+	system("cls");
+	printMainMenu(client);
+
+}
+
+void selectATMChoice(enATMscreen choice, stClient client)
 {
 	switch (choice)
 	{
@@ -177,6 +208,7 @@ void selectATMChoice(enATMscreen choice)
 		break;
 
 	case checkBalance:
+		checkBalanceScreen(client);
 		break;
 
 	default:
@@ -185,7 +217,7 @@ void selectATMChoice(enATMscreen choice)
 	}
 }
 
-void printMainMenu()
+void printMainMenu(stClient& client)
 {
 	enATMscreen choice;
 
@@ -199,9 +231,8 @@ void printMainMenu()
 	cout << "\n\t[5] Logout";
 	cout << "\n===========================================\n";
 	choice = readATMChoice();
-	system("pause>0");
 	system("cls");
-	selectATMChoice(choice);
+	selectATMChoice(choice, client);
 }
 
 //void printClientList(const vector <stClient>& vClient)
