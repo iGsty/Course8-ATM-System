@@ -348,6 +348,45 @@ void quickWithdrawScreen(stClient& client, vector <stClient>& vClient)
 
 }
 
+void normalWithdrawScreen(stClient& client, vector <stClient>& vClient)
+{
+	int amount = 0;
+
+	cout << "\n===========================================\n";
+	cout << "\tNormal Withdraw Screen";
+	cout << "\n===========================================\n";
+	cout << "Your Balance is: " << client.accountBalance;
+	cout << "\n\nEnter an amount multiple of 5's: ";
+
+	do
+	{
+		cin >> amount;
+
+		if (amount % 5 != 0)
+			cout << "\n\nWrong input, please enter an amount multiple of 5's: ";
+
+		if (amount > client.accountBalance)
+			cout << "\n\nYou dont have this much, your current balance is: " << client.accountBalance << " please enter an amount: ";
+
+	} while ( (amount % 5 != 0)  || (amount > client.accountBalance) );
+
+	char answer = 'n';
+	cout << "Are you sure you want to perform this transaction? y/n: ";
+	cin >> answer;
+
+	if (tolower(answer) == 'y')
+	{
+		client.accountBalance -= amount;
+		cout << "\n\nDone successfully. New balance is: " << client.accountBalance;
+		writeClientsBackToFile(vClient, client);
+	}
+
+	cout << "\n\nPress any key to go back to main menu...";
+	system("pause>0");
+	system("cls");
+	printMainMenu(client, vClient);
+}
+
 void selectATMChoice(enATMscreen choice, stClient& client, vector <stClient>& vClient)
 {
 	switch (choice)
@@ -357,6 +396,7 @@ void selectATMChoice(enATMscreen choice, stClient& client, vector <stClient>& vC
 		break;
 
 	case normalWithdraw:
+		normalWithdrawScreen(client, vClient);
 		break;
 
 	case deposit:
