@@ -24,7 +24,20 @@ enum enATMscreen
 	logout = 5
 };
 
-void printMainMenu(stClient& client);
+enum enQuickChoice
+{
+	first_20 = 1,
+	second_50 = 2,
+	third_100 = 3,
+	fourth_200 = 4,
+	fifth_400 = 5,
+	sixth_600 = 6,
+	seventh_800 = 7,
+	eighth_1000 = 8,
+	exitQuick = 9
+};
+
+void printMainMenu(stClient& client, vector <stClient>& vClient);
 
 enATMscreen readATMChoice()
 {
@@ -41,6 +54,23 @@ enATMscreen readATMChoice()
 	} while (num < 1 || num > 5);
 
 	return enATMscreen(num);
+}
+
+enQuickChoice readQuickChoice()
+{
+	short num;
+	cout << "Choose What to Withdraw from [1] to [8]? ";
+	do
+	{
+		cin >> ws >> num;
+		if (num < 1 || num > 9)
+		{
+			cout << "\nSorry wrong input please enter a number between [1] to [8]: ";
+		}
+
+	} while (num < 1 || num > 9);
+
+	return enQuickChoice(num);
 }
 
 vector <string> splitString(string line)
@@ -63,6 +93,19 @@ vector <string> splitString(string line)
 		vS1.push_back(line);
 
 	return vS1;
+}
+
+string convertClientToLine(stClient& client)
+{
+	string line = "";
+
+	line += client.accountNumber + delim
+		+ client.pinCode + delim
+		+ client.name + delim
+		+ client.phone + delim
+		+ to_string(client.accountBalance);
+
+	return line;
 }
 
 stClient assignClientData(const vector <string>& vS1)
@@ -101,6 +144,29 @@ vector <stClient> readClientsFromFile()
 	}
 
 	return vClient;
+}
+
+void writeClientsBackToFile(vector <stClient>& vClient, stClient& client)
+{
+	fstream myFile;
+
+	myFile.open(clientsFilePath, ios::out);
+	{
+		if (myFile.is_open())
+		{
+			string line;
+			for (stClient& c : vClient)
+			{
+				if (c.accountNumber == client.accountNumber)
+					c.accountBalance = client.accountBalance;
+
+				line = convertClientToLine(c);
+				myFile << line << endl;
+			}
+
+			myFile.close();
+		}
+	}
 }
 
 stClient getClientData(vector <stClient>& vClient, string accountNum)
@@ -176,11 +242,11 @@ void loginScreen()
 	if (validClient)
 	{
 		system("cls");
-		printMainMenu(client);
+		printMainMenu(client, vClient);
 	}
 }
 
-void checkBalanceScreen(stClient& client)
+void checkBalanceScreen(stClient& client, vector <stClient>& vClient)
 {
 	cout << "\n===========================================\n";
 	cout << "\tCheck Balance Screen";
@@ -190,15 +256,104 @@ void checkBalanceScreen(stClient& client)
 	cout << "\n\nPress any key to go back to main menu...";
 	system("pause>0");
 	system("cls");
-	printMainMenu(client);
+	printMainMenu(client, vClient);
 
 }
 
-void selectATMChoice(enATMscreen choice, stClient client)
+void withdrawMoney(stClient& client, int amount, vector <stClient>& vClient)
+{
+	int currentBalance = client.accountBalance;
+
+	if (amount > currentBalance)
+		cout << "\n\nThe amount exceeds your balance, make another choice.";
+
+	else
+	{
+		char answer = 'n';
+		cout << "\n\nAre you sure you want to perform this transaction? y/n: ";
+		cin >> ws >> answer;
+
+		if (tolower(answer) == 'y')
+		{
+			client.accountBalance -= amount;
+			cout << "\n\nDone successfully. New balance is: " << client.accountBalance;
+			writeClientsBackToFile(vClient, client);
+		}
+	}
+
+	cout << "\n\nPress any key to go back to main menu...";
+	system("pause>0");
+	system("cls");
+	printMainMenu(client, vClient);
+}
+
+void selectQuickChoice(enQuickChoice choice, stClient& client, vector <stClient>& vClient)
+{
+	switch (choice)
+	{
+	case first_20:
+		withdrawMoney(client, 20, vClient);
+		break;
+
+	case second_50:
+		withdrawMoney(client, 50, vClient);
+		break;
+
+	case third_100:
+		withdrawMoney(client, 100, vClient);
+		break;
+
+	case fourth_200:
+		withdrawMoney(client, 200, vClient);
+		break;
+
+	case fifth_400:
+		withdrawMoney(client, 400, vClient);
+		break;
+
+	case sixth_600:
+		withdrawMoney(client, 600, vClient);
+		break;
+
+	case seventh_800:
+		withdrawMoney(client, 800, vClient);
+		break;
+
+	case eighth_1000:
+		withdrawMoney(client, 1000, vClient);
+		break;
+
+	default:
+		printMainMenu(client, vClient);
+		break;
+	}
+}
+
+void quickWithdrawScreen(stClient& client, vector <stClient>& vClient)
+{
+	enQuickChoice choice;
+
+	cout << "\n===========================================\n";
+	cout << "\tQuick Withdraw";
+	cout << "\n===========================================\n";
+	cout << "\t[1] 20  \t[2] 50";
+	cout << "\n\t[3] 100 \t[4] 200";
+	cout << "\n\t[5] 400 \t[6] 600";
+	cout << "\n\t[7] 800 \t[8] 1000";
+	cout << "\n\t[9] Exit";
+	cout << "\n===========================================\n";
+	cout << "\nYour Balance is " << to_string(client.accountBalance);
+	choice = readQuickChoice();
+	selectQuickChoice(choice, client, vClient);
+
+}
+
+void selectATMChoice(enATMscreen choice, stClient& client, vector <stClient>& vClient)
 {
 	switch (choice)
 	{
 	case quickWithdraw:
+		quickWithdrawScreen(client, vClient);
 		break;
 
 	case normalWithdraw:
@@ -208,7 +363,7 @@ void selectATMChoice(enATMscreen choice, stClient client)
 		break;
 
 	case checkBalance:
-		checkBalanceScreen(client);
+		checkBalanceScreen(client, vClient);
 		break;
 
 	default:
@@ -217,7 +372,7 @@ void selectATMChoice(enATMscreen choice, stClient client)
 	}
 }
 
-void printMainMenu(stClient& client)
+void printMainMenu(stClient& client, vector <stClient>& vClient)
 {
 	enATMscreen choice;
 
@@ -232,28 +387,8 @@ void printMainMenu(stClient& client)
 	cout << "\n===========================================\n";
 	choice = readATMChoice();
 	system("cls");
-	selectATMChoice(choice, client);
+	selectATMChoice(choice, client, vClient);
 }
-
-//void printClientList(const vector <stClient>& vClient)
-//{
-//	short clientNumber = vClient.size();
-//
-//	
-//		cout << "\n\t\t\t\t Client List (" << clientNumber << ") Client(s).\n";
-//		cout << "\n___________________________________________________________________________________________\n";
-//		cout << "\n| Account Number | Pin Code\t| Client Name\t\t\t| Phone\t\t| Balance\n";
-//		cout << "\n___________________________________________________________________________________________\n";
-//		for (short i = 0; i < clientNumber; i++)
-//		{
-//			cout << "\n| " << vClient[i].accountNumber << "\t\t | " << vClient[i].pinCode << "\t\t| " << left << setw(20) << vClient[i].name << "\t\t| " << vClient[i].phone << "\t| " << fixed << vClient[i].accountBalance;
-//		}
-//		cout << "\n___________________________________________________________________________________________\n";
-//		cout << "\n\nPress any key to go back to main menu...";
-//		system("pause>0");
-//		system("cls");
-//
-//}
 
 
 int main()
